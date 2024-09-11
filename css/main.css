@@ -1,0 +1,49 @@
+body {
+    background: linear-gradient(90deg, aqua, #3a72ec);
+}
+
+header {
+    text-align: center;
+}
+
+header h1 {
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+main, header {
+    margin: 1% 1%;
+    padding: 0 2%;
+    border: 2px dashed rgb(0, 0, 255);
+    border-radius: 10px;
+    background-color: whitesmoke;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+code {
+    color: rgb(0, 71, 203);
+    font-size: 1.3em;
+}
+
+/*==menu==*/
+
+nav#menu {
+    font-size: 1.5em;
+    margin: 5px;
+    border-radius: 7px;
+    padding-top: 5px;
+}
+
+nav#menu li {
+    display: inline-block;
+    padding: 0 5%;
+}
+
+nav#menu li a {
+    text-decoration: none;
+    font-size: 1.1em;
+}
+
+/*==link==*/
+a {
+    font-size: 1.2em;
+}
