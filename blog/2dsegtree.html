@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D szegmensfa</title>
+    <link rel="stylesheet" type="text/css" href="../css/main.css" media="all">
+</head>
+
+<body>
+    <header>
+        <h1>
+            2 és magasabb dimenziójú szegmensfák
+        </h1>
+        <p class="header-time">TIME</p>
+    </header>
+    <main>
+        <h1>
+            Előzmény
+        </h1>
+        <p>
+            Egy kellemes októberi este épp korábbi COCI feladatkat oldottam, amikor szembejött velem a következő
+            feladat: <a class="normalis" href="https://evaluator.hsin.hr/tasks/HONI232415an2dl/">AN2DL</a>.
+        </p>
+        <p>
+            Maga a feladat egyszerű: adott egy NxM-es mátrix. Határozzuk meg az összes RxS méretű részmátrixban a
+            legnagyobb elemet.
+        </p>
+        <p>
+            Első körben valahogy a maximum-queue vagy maximum stack ötletét terjesztettem volna ki mátrixra, azonban
+            eszembe jutott egy (számomra) sokkal érdekesebb kérdés: vajon lehet-e olyan szegmensfát írni, ami nem tömb
+            intervallumokat tárol, hanem részmátrixokat? És ha igen, akkor milyen limitációi vannak?
+        </p>
+        <p>
+            Bár a feladatot ezzel az ötlettel csak 29/110 pontra tudtam megoldani, de ez nem szegte kedvem: kíváncsi
+            voltam, hogy milyen lehet egy "részmátrix"-fát összerakni, illetve, hogy tetszőleges K dimenzió esetén mi a
+            helyzet.
+        </p>
+        <h1>
+            A "részmátrix"-fa
+        </h1>
+        <p>
+            Következzen akkor a fa szerkezetének elméleti leírása illetve egy pár elemzés.
+        </p>
+        <h2>
+            A fa szerkezete 2D esetben
+        </h2>
+        <p>
+            2D-s szegmensfák természetesen léteznek: ha rákerestek az interneten vagy megkérditek az AI-t, akkor a következő koncepciót fogja
+            nektek feldobni: <b>a 2D-s szegmensfa egy olyan szegmensfa, amelynek minden csúcsa is maga egy szegmensfa</b> (lásd pl a <a class="normalis" href="https://www.geeksforgeeks.org/two-dimensional-segment-tree-sub-matrix-sum/" target="_blank">Geeks For Geeks cikkjét</a>), viszont én nem ezt az utat követtem. Inkább azon gondolkodtam el, hogy mi lenne, ha a szegmensfa egy csúcsa nem egy [l..r] intervallumot ábrázolna, hanem egy [t..b]x[l..r] ún. két-dimenziós intervallumot - vagyis a mátrixnak egy részét.
+        </p>
+        <p>
+            Vegyük például az összegzős feladatot: van sok query-nk, és mindegyikben vagy megváltoztatjuk a mátrix (i, j) pozícióban lévő elemét, vagy adott (xt, yt, xb, yb) számnégyes esetén határozzuk meg abban a részmátrixban az elemek összegét, amelynek bal felső csúcsa (xt, yt), jobb alsó csúcsa (xb, yb) koordinátájú. Ekkor egy szegmensfának a csúcsát 4 dolog helyett 6 fog jellemezni: a sorszáma, a 2d-s intervallum 4 végpontja és az eredmény, ami jelen esetben az összeg.
+        </p>
+        <p>
+            A későbbiekben legyen st a szegmensfát ábrázoló tömb és x a mátrix, amelyik NxM-es. Mind az st tömböt, mind az x mátrixot 0-tól indexeljük.
+        </p>
+        <p>
+            Tekintsük a k-dik csúcsot, amelyhez a [t..b]x[l..r] intervallum tartozik. Mikor lesz ez a csúcs levél? Kiindulva a klasszikus szegmensfából, azok a csúcsok lesznek levelek, amik az eredeti tömb 1 elemét reprezentálják. Itt sem más a helyzet: olyan csúcsok lesznek levelek, amik a mátrix egy elemét reprezeltálják, vagyis t==b és l==r. Ekkor st[k] = x[t][l].
+        </p>
+        <p>
+            Amikor a csúcs nem levél, akkor viszont 4 részre oszlódik: a bal felső, jobb felső, bal alsó és jobb alsó részmátrixokra. Ezeket úgy kapjuk, hogy a [t..b] és az [l..r] intervallumokat félbevágjuk; legyen rm = (t + b) / 2 és cm = (l + r) / 2. Ekkor így alakulnak a gyerekek sorszámai és a hozzájuk tartozó részmátrixok:
+        </p>
+        <div class="tableDiv">
+            <table>
+                <tr>
+                    <th>Rész</th>
+                    <th>Sorszám</th>
+                    <th>Intervallum</th>
+                </tr>
+                <tr>
+                    <td>bal felső</td>
+                    <td>4 * k + 1</td>
+                    <td class="intervalRow">[t..rm]x[l..cm]</td>
+                </tr>
+                <tr>
+                    <td>jobb felső</td>
+                    <td>4 * k + 2</td>
+                    <td class="intervalRow">[t..rm]x[cm+1..r]</td>
+                </tr>
+                <tr>
+                    <td>bal alsó</td>
+                    <td>4 * k + 3</td>
+                    <td class="intervalRow">[rm+1..b]x[l..cm]</td>
+                </tr>
+                <tr>
+                    <td>jobb alsó</td>
+                    <td>4 * k + 4</td>
+                    <td class="intervalRow">[rm+1..b]x[cm+1..r]</td>
+                </tr>
+            </table>
+        </div>
+        <p>
+            Ekkor st[k] = st[4 * k + 1] + st[4 * k + 2] + st[4 * k + 3] + st[4 * k + 4].  
+        </p>
+        <p>
+            Ezzel a megközelítéssel azonban előjön egy olyan probléma, amivel 1 dimenziós esetben nem találkozunk: mi történik pl, ha t == b de l != r? Ekkor rm = t, és mind a 4 * k + 3, mind a 4 * k + 4 csúcs olyan intervallumot reprezentál, ahol az első intervallum bal vége nagyobb, mint a jobb vége - ami nyilvánvalóan nem létezik. Ezt külön kell kezelni valahogyan. Ezt többféleképpen lehet kezelni:
+            <ol>
+                <li><p>Ha ilyen csúcsba kerülünk, akkor nem folytatjuk a számítást; a szegmensfa megfelelő csúcsa (és az ő gyerekcsúcsai is) a nulla értéket kapják</p></li>
+                <li><p>Kiegészítjük a mátrixot úgy, hogy négyzetes legyen, és mérete 2-hatvány legyen (így ilyen eset nem fordul elő)</p></li>
+                <li><p>Korrigáljuk az intervallumot, vagyis ha a bal vége nagyobb, mint a jobb vége, akkor a bal végét a jobb végére állítjuk</p></li>
+            </ol>
+            A megközelítés előnyét-hátrányát illetve implementációját később nézzük.
+        </p>
+        <p>
+            Megvan a szegmensfa felépítése. Innen igazából készen vagyunk; minden úgy működik, mint egy dimenziós esetben, csak épp nem 1, hanem 2 intervallummal foglalkozunk. Tehát pl. frissítés esetén a frissitendő elem koordinátáit kell megnézni, hogy melyik gyerek által reprezentált részmátrixban vannak benne (vagyis az első koordináta az első, a második koordináta a második intervallumban van benne). Ugyanúgy működik a lekérdezés és még a lazy propagation is, természetesen ott is figyelve a 2D-s intervallumra. 
+        </p>
+        <h2>
+            Művelet- és tárhelyigény 2D esetben
+        </h2>
+        <p>
+            Kezdjük a műveletigénnyel. Sejthető, hogy a sima szegmensfához hasonlóan itt is logaritmikus-szerű bonyolultságokkal dolgozunk. Nyilvánvalóan a fa magassága log(N * M) nagyságrendű, ugyanis minden mátrix esetében negyedeljük annak területét (vagyis felezzük mindkét oldalát). Ahhoz, hogy pontosabban tudjunk számolni, egészítsük ki a mátrixot
+        </p>
+        <p>
+            Amikor felépítjük, akkor a mátrix minden elemét 1-szer meglátogatjuk, így N 
+        </p>
+        <h2>
+            Több dimenziós eset
+        </h2>
+        <h1>
+            Implementáció
+        </h1>
+        <h2>
+            2D eset implementációja
+        </h2>
+        <h2>
+            Általános eset implementációja
+        </h2>
+        <h1>
+            Következtetés
+        </h1>
+    </main>
+    <footer>
+        <a href="../blog.html" target="_parent">Vissza a blog oldalra</a>
+    </footer>
+</body>
+
+</html>
